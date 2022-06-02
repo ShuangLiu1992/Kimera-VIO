@@ -161,66 +161,66 @@ MonoImuPipeline::MonoImuPipeline(const VioParams& params,
   }
 
   if (FLAGS_visualize) {
-    visualizer_module_ = VIO::make_unique<VisualizerModule>(
-        //! Send ouput of visualizer to the display_input_queue_
-        &display_input_queue_,
-        parallel_run_,
-        FLAGS_use_lcd,
-        // Use given visualizer if any
-        visualizer ? std::move(visualizer)
-                   : VisualizerFactory::createVisualizer(
-                         VisualizerType::OpenCV,
-                         // TODO(Toni): bundle these three params in
-                         // VisualizerParams...
-                         // NOTE: use kNone or kPointCloud for now because
-                         //   mesher isn't enabled.
-                         // TODO(marcus): handle in params instead!
-                         static_cast<VisualizationType>(FLAGS_viz_type),
-                         static_cast<BackendType>(params.backend_type_)));
+    // visualizer_module_ = VIO::make_unique<VisualizerModule>(
+    //     //! Send ouput of visualizer to the display_input_queue_
+    //     &display_input_queue_,
+    //     parallel_run_,
+    //     FLAGS_use_lcd,
+    //     // Use given visualizer if any
+    //     visualizer ? std::move(visualizer)
+    //                : VisualizerFactory::createVisualizer(
+    //                      VisualizerType::OpenCV,
+    //                      // TODO(Toni): bundle these three params in
+    //                      // VisualizerParams...
+    //                      // NOTE: use kNone or kPointCloud for now because
+    //                      //   mesher isn't enabled.
+    //                      // TODO(marcus): handle in params instead!
+    //                      static_cast<VisualizationType>(FLAGS_viz_type),
+    //                      static_cast<BackendType>(params.backend_type_)));
 
-    //! Register input callbacks
-    CHECK(vio_backend_module_);
-    vio_backend_module_->registerOutputCallback(
-        std::bind(&VisualizerModule::fillBackendQueue,
-                  std::ref(*CHECK_NOTNULL(visualizer_module_.get())),
-                  std::placeholders::_1));
+    // //! Register input callbacks
+    // CHECK(vio_backend_module_);
+    // vio_backend_module_->registerOutputCallback(
+    //     std::bind(&VisualizerModule::fillBackendQueue,
+    //               std::ref(*CHECK_NOTNULL(visualizer_module_.get())),
+    //               std::placeholders::_1));
 
-    auto& visualizer_module = visualizer_module_;
-    vio_frontend_module_->registerOutputCallback(
-        [&visualizer_module](const FrontendOutputPacketBase::Ptr& output) {
-          MonoFrontendOutput::Ptr converted_output =
-              VIO::safeCast<FrontendOutputPacketBase, MonoFrontendOutput>(
-                  output);
-          CHECK_NOTNULL(visualizer_module.get())
-              ->fillFrontendQueue(converted_output);
-    });
+    // auto& visualizer_module = visualizer_module_;
+    // vio_frontend_module_->registerOutputCallback(
+    //     [&visualizer_module](const FrontendOutputPacketBase::Ptr& output) {
+    //       MonoFrontendOutput::Ptr converted_output =
+    //           VIO::safeCast<FrontendOutputPacketBase, MonoFrontendOutput>(
+    //               output);
+    //       CHECK_NOTNULL(visualizer_module.get())
+    //           ->fillFrontendQueue(converted_output);
+    // });
 
-    // if (mesher_module_) {
-    //   mesher_module_->registerOutputCallback(
-    //       std::bind(&VisualizerModule::fillMesherQueue,
+    // // if (mesher_module_) {
+    // //   mesher_module_->registerOutputCallback(
+    // //       std::bind(&VisualizerModule::fillMesherQueue,
+    // //                 std::ref(*CHECK_NOTNULL(visualizer_module_.get())),
+    // //                 std::placeholders::_1));
+    // // }
+
+    // if (lcd_module_) {
+    //   lcd_module_->registerOutputCallback(
+    //       std::bind(&VisualizerModule::fillLcdQueue,
     //                 std::ref(*CHECK_NOTNULL(visualizer_module_.get())),
     //                 std::placeholders::_1));
     // }
 
-    if (lcd_module_) {
-      lcd_module_->registerOutputCallback(
-          std::bind(&VisualizerModule::fillLcdQueue,
-                    std::ref(*CHECK_NOTNULL(visualizer_module_.get())),
-                    std::placeholders::_1));
-    }
-
-    //! Actual displaying of visual data is done in the main thread.
-    CHECK(params.display_params_);
-    display_module_ = VIO::make_unique<DisplayModule>(
-        &display_input_queue_,
-        nullptr,
-        parallel_run_,
-        // Use given displayer if any
-        displayer ? std::move(displayer)
-                  : DisplayFactory::makeDisplay(
-                        params.display_params_->display_type_,
-                        params.display_params_,
-                        std::bind(&MonoImuPipeline::shutdown, this)));
+    // //! Actual displaying of visual data is done in the main thread.
+    // CHECK(params.display_params_);
+    // display_module_ = VIO::make_unique<DisplayModule>(
+    //     &display_input_queue_,
+    //     nullptr,
+    //     parallel_run_,
+    //     // Use given displayer if any
+    //     displayer ? std::move(displayer)
+    //               : DisplayFactory::makeDisplay(
+    //                     params.display_params_->display_type_,
+    //                     params.display_params_,
+    //                     std::bind(&MonoImuPipeline::shutdown, this)));
   }
 
   launchThreads();

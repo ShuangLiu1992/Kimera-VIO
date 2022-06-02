@@ -15,7 +15,6 @@
 #include "kimera-vio/utils/UtilsOpenCV.h"
 
 #include <stdlib.h>
-#include <sys/time.h>
 #include <fstream>
 #include <iomanip>
 #include <sstream>

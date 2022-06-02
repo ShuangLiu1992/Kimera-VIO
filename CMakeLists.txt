@@ -7,15 +7,6 @@ set(GFLAGS_PREFER_EXPORTED_GFLAGS_CMAKE_CONFIGURATION TRUE)
 set(GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION TRUE)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
-IF(APPLE)
-    # Fix linking on 10.14+. See https://stackoverflow.com/questions/54068035
-    LINK_DIRECTORIES(/usr/local/lib)
-ENDIF()
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 message(STATUS "==============================================================")
 message(STATUS "====================  Dependencies ===========================")
 
@@ -29,18 +20,19 @@ if(NOT TARGET Boost::boost)
   INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 endif()
 
+if(MSVC)
+  add_definitions(-DNOMINMAX)
+  add_definitions(-DGLOG_NO_ABBREVIATED_SEVERITIES)
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
+  add_definitions(-DNOGDI)
+endif()
+
 find_package(Gflags REQUIRED)
-find_package(Glog 0.3.5 REQUIRED)
+find_package(Glog REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(opengv REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(DBoW2 REQUIRED)
-if(NOT TARGET DBoW2::DBoW2)
-  add_library(DBoW2::DBoW2 INTERFACE IMPORTED)
-  set_target_properties(DBoW2::DBoW2 PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${DBoW2_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${DBoW2_INCLUDE_DIRS}")
-endif()
 find_package(KimeraRPGO REQUIRED)
 # Pangolin is optional
 find_package(Pangolin QUIET)
@@ -57,31 +49,31 @@ include(ExternalProject)
 ### Download and unzip the vocabularly file
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.yml)
   message(STATUS "Downloading vocabulary file from dropbox.")
-  file(DOWNLOAD
-       http://www.dropbox.com/s/lyo0qgbdxn6eg6o/ORBvoc.zip?dl=1
-       ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
-       SHOW_PROGRESS
-       STATUS orbvoc_download_success
-       TIMEOUT 60)
-  if(orbvoc_download_success)
-    message(STATUS "Unzipping vocabulary file.")
+#   file(DOWNLOAD
+#        http://www.dropbox.com/s/lyo0qgbdxn6eg6o/ORBvoc.zip?dl=1
+#        ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
+#        SHOW_PROGRESS
+#        STATUS orbvoc_download_success
+#        TIMEOUT 60)
+#   if(orbvoc_download_success)
+#     message(STATUS "Unzipping vocabulary file.")
 
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
-                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
-    message(STATUS "Moving vocabulary file.")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/
-                    ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/)
-  else(orbvoc_download_success)
-    message(STATUS "Failed to download vocabulary file. Please download manually.")
-  endif(orbvoc_download_success)
-else()
-  message(STATUS "Vocabulary file exists, will not download.")
+#     execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
+#                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
+#     message(STATUS "Moving vocabulary file.")
+#     execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
+#                     ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/
+#                     ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
+#     execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/)
+#   else(orbvoc_download_success)
+#     message(STATUS "Failed to download vocabulary file. Please download manually.")
+#   endif(orbvoc_download_success)
+# else()
+#   message(STATUS "Vocabulary file exists, will not download.")
 endif()
 
 ### Compile the code
-add_library(${PROJECT_NAME} SHARED "")
+add_library(${PROJECT_NAME} SHARED)
 
 ### Add source code for data provider.
 add_subdirectory(include/kimera-vio/dataprovider)
@@ -130,24 +122,22 @@ add_subdirectory(include/kimera-vio/third_party/triangle)
 add_subdirectory(src/third_party/triangle)
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE
-    opengv
-    DBoW2::DBoW2
-    KimeraRPGO
   PUBLIC
+    ${DBoW2_LIBRARIES}
+    KimeraRPGO
+    opengv
     Boost::boost
     ${OpenCV_LIBRARIES}
-    ${GFLAGS_LIBRARIES}
-    ${GLOG_LIBRARIES}
+    CONAN_PKG::gflags
+    glog::glog
     gtsam
     gtsam_unstable
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     ${OpenCV_INCLUDE_DIRS}
-    ${GFLAGS_INCLUDE_DIRS}
-    ${GLOG_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIR}
+    ${DBoW2_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -167,25 +157,16 @@ else(Pangolin_FOUND)
   message(STATUS "Pangolin not found.")
 endif(Pangolin_FOUND)
 
-target_compile_options(${PROJECT_NAME}
-  PRIVATE -Wall -pipe
-  PRIVATE -march=native
-)
-
-# We would just need to say cxx_std_11 if we were using cmake 3.8
-target_compile_features(${PROJECT_NAME} PUBLIC
-        cxx_auto_type cxx_constexpr cxx_range_for cxx_nullptr cxx_override)
-
 # Add an alias so that library can be used inside the build tree,
 # e.g. when testing
 add_library(kimera_vio::kimera_vio ALIAS kimera_vio)
 
-add_executable(stereoVIOEuroc ./examples/KimeraVIO.cpp)
-target_link_libraries(stereoVIOEuroc PUBLIC kimera_vio::kimera_vio)
+#add_executable(stereoVIOEuroc ./examples/KimeraVIO.cpp)
+#target_link_libraries(stereoVIOEuroc PUBLIC kimera_vio::kimera_vio)
 
 ############################### TESTS ##########################################
 ### Add testing
-option(KIMERA_BUILD_TESTS "Build tests" ON)
+option(KIMERA_BUILD_TESTS "Build tests" OFF)
 if(KIMERA_BUILD_TESTS)
   # Download and unpack googletest at configure time
   # TODO Consider doing the same for glog, gflags, although it might
@@ -336,8 +317,6 @@ else(EXPORT_KIMERA)
   install(FILES
       ${CMAKE_CURRENT_BINARY_DIR}/kimera_vioConfig.cmake
       ${CMAKE_CURRENT_BINARY_DIR}/kimera_vioConfigVersion.cmake
-      ${CMAKE_CURRENT_LIST_DIR}/cmake/FindGflags.cmake
-      ${CMAKE_CURRENT_LIST_DIR}/cmake/FindGlog.cmake
       DESTINATION ${INSTALL_CONFIGDIR}
   )
 endif(EXPORT_KIMERA)

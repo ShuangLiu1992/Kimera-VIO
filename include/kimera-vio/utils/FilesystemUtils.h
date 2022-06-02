@@ -1,9 +1,11 @@
 #pragma once
 
-#include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
 
 #include <glog/logging.h>
+
+#include <filesystem>
 
 namespace VIO {
 namespace common {
@@ -24,7 +26,8 @@ static bool createDirectory(const std::string& dir_path,
                             bool override_if_exists = false) {
   std::string path = pathAppend(dir_path, dir_name);
   // Give Read/write/search permissions for owner.
-  int status = mkdir(path.c_str(), S_IRWXU);
+  //int status = mkdir(path.c_str(), S_IRWXU);
+  int status = 0;
   if (status == 0) {
     LOG(INFO) << "Directory created: " << path;
     return true;

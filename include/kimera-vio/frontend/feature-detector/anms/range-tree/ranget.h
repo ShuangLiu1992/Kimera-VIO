@@ -168,9 +168,9 @@ public:
 		std::vector<data *> * const res = new std::vector<data *>;
 		res->reserve(resultreserve);
 
-		const node * list[maxterminals];
+		std::vector<const node *> list(maxterminals);
 		u32 listcur = 0;
-		findnodes(&start, xmin, xmax, list, listcur);
+		findnodes(&start, xmin, xmax, list.data(), listcur);
 
 		const u32 ncount = listcur;
 
@@ -519,8 +519,8 @@ private:
 		findnodes(n->right, xmin, xmax, list, listcur);
 	}
 
-	void mergekids(pty * &arr, u32 &ycount, node * const __restrict__ left,
-			node * const __restrict__ right) const {
+	void mergekids(pty * &arr, u32 &ycount, node * const left,
+			node * const right) const {
 
 		u32 l, r;
 		const u32 lmax = left ? left->ycount : 0;
@@ -670,7 +670,7 @@ private:
 		return b;
 	}
 
-	void pswap(point & __restrict__ a, point & __restrict__ b) const {
+	void pswap(point & a, point & b) const {
 		point tmp = a;
 		a = b;
 		b = tmp;

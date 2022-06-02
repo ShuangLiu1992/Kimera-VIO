@@ -16,7 +16,6 @@
 
 #include <math.h>
 #include <iomanip>
-#include <sys/time.h>  // For gettimeofday...
 
 #include "kimera-vio/common/vio_types.h"
 
@@ -58,10 +57,7 @@ std::int64_t SecToNsec(const double timeInSec) {
 
 // (NOT TESTED) Get current time in seconds
 double getCurrentTimeInSeconds() {
-  timeval tv;
-  gettimeofday(&tv, NULL);
-  int64_t time_usec = tv.tv_sec * 1000000ll + tv.tv_usec;
-  return ((double)time_usec * 1e-6);
+  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 }  // namespace UtilsNumerical
