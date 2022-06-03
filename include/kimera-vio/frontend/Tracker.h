@@ -39,7 +39,7 @@ namespace VIO {
 // TODO(Toni): Fast-forwarding bcs of an issue wiht includes:
 // if you include here the display-definitions.h, a million errors appear, this
 // should go away after properly cleaning what each file includes.
-class DisplayInputBase;
+struct DisplayInputBase;
 using DisplayQueue = ThreadsafeQueue<std::unique_ptr<DisplayInputBase>>;
 
 class Tracker {
