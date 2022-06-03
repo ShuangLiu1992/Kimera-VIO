@@ -49,31 +49,31 @@ include(ExternalProject)
 ### Download and unzip the vocabularly file
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.yml)
   message(STATUS "Downloading vocabulary file from dropbox.")
-#   file(DOWNLOAD
-#        http://www.dropbox.com/s/lyo0qgbdxn6eg6o/ORBvoc.zip?dl=1
-#        ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
-#        SHOW_PROGRESS
-#        STATUS orbvoc_download_success
-#        TIMEOUT 60)
-#   if(orbvoc_download_success)
-#     message(STATUS "Unzipping vocabulary file.")
+  file(DOWNLOAD
+       http://www.dropbox.com/s/lyo0qgbdxn6eg6o/ORBvoc.zip?dl=1
+       ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
+       SHOW_PROGRESS
+       STATUS orbvoc_download_success
+       TIMEOUT 60)
+  if(orbvoc_download_success)
+    message(STATUS "Unzipping vocabulary file.")
 
-#     execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
-#                             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
-#     message(STATUS "Moving vocabulary file.")
-#     execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
-#                     ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/
-#                     ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
-#     execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/)
-#   else(orbvoc_download_success)
-#     message(STATUS "Failed to download vocabulary file. Please download manually.")
-#   endif(orbvoc_download_success)
-# else()
-#   message(STATUS "Vocabulary file exists, will not download.")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc.zip
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
+    message(STATUS "Moving vocabulary file.")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/
+                    ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_SOURCE_DIR}/vocabulary/ORBvoc/)
+  else(orbvoc_download_success)
+    message(STATUS "Failed to download vocabulary file. Please download manually.")
+  endif(orbvoc_download_success)
+else()
+  message(STATUS "Vocabulary file exists, will not download.")
 endif()
 
 ### Compile the code
-add_library(${PROJECT_NAME} SHARED)
+add_library(${PROJECT_NAME})
 
 ### Add source code for data provider.
 add_subdirectory(include/kimera-vio/dataprovider)
@@ -161,8 +161,8 @@ endif(Pangolin_FOUND)
 # e.g. when testing
 add_library(kimera_vio::kimera_vio ALIAS kimera_vio)
 
-#add_executable(stereoVIOEuroc ./examples/KimeraVIO.cpp)
-#target_link_libraries(stereoVIOEuroc PUBLIC kimera_vio::kimera_vio)
+add_executable(stereoVIOEuroc ./examples/KimeraVIO.cpp)
+target_link_libraries(stereoVIOEuroc PUBLIC kimera_vio::kimera_vio)
 
 ############################### TESTS ##########################################
 ### Add testing
