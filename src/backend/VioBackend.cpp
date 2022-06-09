@@ -673,7 +673,7 @@ void VioBackend::addStereoMeasurementsToFeatureTracks(
 
   // Make sure the landmarks_kf vector is empty and has a suitable size.
   const size_t& n_stereo_measurements = stereo_meas_kf.size();
-  landmarks_kf->resize(n_stereo_measurements);
+  landmarks_kf->resize(n_stereo_measurements, -1);
 
   // Store landmark ids.
   // TODO(Toni): the concept of feature tracks should not be in the Backend...
